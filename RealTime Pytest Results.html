@@ -62,7 +62,7 @@
     <script>
         function renderFromJson(data) {
             // Update summary fields
-            document.getElementById('current-status').textContent = data.header.title || '';
+            document.getElementById('current-status').textContent = data.status || '';
             document.getElementById('start-time').textContent = data.start_time || '';
             document.getElementById('end-time').textContent = data.end_time || '';
             document.getElementById('overall-time').textContent = data.overall_time || '';
@@ -74,12 +74,16 @@
             // Populate table
             let tbody = '';
             data.tests.forEach((test, idx) => {
-                tbody += `<tr>
-                    <td>${test.name || ''}</td>
-                    <td>${test.status || ''}</td>
-                    <td>${test.start_time || ''}</td>
-                    <td>${test.end_time || ''}</td>
-                    <td>${test.execution_time || ''}</td>
+                tbody += `<tr class="${test.status?.toLowerCase()}">
+                    <td class="${test.status === 'Failed' && test.exception_log ? 'expandable' : ''}" data-idx="${idx}">
+                        ${test.name}
+                        ${test.status === 'Failed' && test.exception_log ? 
+                          `<div class="exception-log" id="log-${idx}">${test.exception_log}</div>` : ''}
+                    </td>
+                    <td>${test.status}</td>
+                    <td>${test.start_time}</td>
+                    <td>${test.end_time}</td>
+                    <td>${test.execution_time}</td>
                 </tr>`;
             });
             $('#test-table tbody').html(tbody);
@@ -96,13 +100,13 @@
             }
         }
 
-        // Fetch JSON and render
-        fetch('https://raw.githubusercontent.com/nmfireball/PytestViewer/main/results.json')
+        // Fetch JSON from GitHub Pages URL
+        fetch('https://nmfireball.github.io/PytestViewer/results.json')
             .then(response => response.json())
             .then(data => renderFromJson(data))
             .catch(err => {
-                alert('Could not load results.json');
-                console.error(err);
+                console.error('Error loading results:', err);
+                alert('Could not load results.json. Check console for details.');
             });
     </script>
 </body>
