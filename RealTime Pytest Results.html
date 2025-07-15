@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MIST AUTOMATION EXECUTION LIVE REPORT</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        .exception-log { display: none; white-space: pre-wrap; background-color: #eee; padding: 10px; margin-top: 5px; border-left: 4px solid #d9534f; color: #a94442; font-size: 0.95em; }
+        .expandable { cursor: pointer; color: blue; text-decoration: underline; }
+        .failed .expandable { color: #d9534f; text-decoration: none; font-weight: bold; }
+        tr.passed { background-color: #e6ffe6 !important; color: #222; }
+        tr.failed { background-color: #ffe6e6 !important; color: #222; }
+        tr.skipped { background-color: #f9f9f9 !important; color: #222; }
+        tr.inprogress { background-color: #fffbe6 !important; color: #222; }
+        .summary-box {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .summary-box strong {
+            margin-right: 8px;
+        }
+        table.display {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>MIST AUTOMATION EXECUTION LIVE REPORT</h1>
+    <div class="summary-box">
+        <strong>Current Status:</strong> <span id="current-status"></span><br>
+        <strong>Start Time:</strong> <span id="start-time"></span><br>
+        <strong>End Time:</strong> <span id="end-time"></span><br>
+        <strong>Overall Execution Time:</strong> <span id="overall-time"></span><br>
+        <strong>Passed:</strong> <span id="passed-count"></span>
+        <strong>Failed:</strong> <span id="failed-count"></span>
+        <strong>Skipped:</strong> <span id="skipped-count"></span>
+        <strong>In Progress:</strong> <span id="inprogress-count"></span>
+    </div>
+    <hr>
+    <table id="test-table" class="display">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Status</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Execution Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated by JavaScript -->
+        </tbody>
+    </table>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        function renderFromJson(data) {
+            // Update summary fields
+            document.getElementById('current-status').textContent = data.header.title || '';
+            document.getElementById('start-time').textContent = data.header.start_time || '';
+            document.getElementById('end-time').textContent = data.header.end_time || '';
+            document.getElementById('overall-time').textContent = data.header.total_time || '';
+            // Calculate counts
+            let passed = 0, failed = 0, skipped = 0, inprogress = 0;
+            data.results.forEach(test => {
+                if (test.status === 'passed') passed++;
+                else if (test.status === 'failed') failed++;
+                else if (test.status === 'skipped') skipped++;
+                else if (test.status === 'inprogress') inprogress++;
+            });
+            document.getElementById('passed-count').textContent = passed;
+            document.getElementById('failed-count').textContent = failed;
+            document.getElementById('skipped-count').textContent = skipped;
+            document.getElementById('inprogress-count').textContent = inprogress;
+
+            // Populate table
+            let tbody = '';
+            data.results.forEach((test, idx) => {
+                tbody += `<tr class="${test.status}">
+                    <td class="${test.status === 'failed' && test.exception ? 'expandable' : ''}" data-idx="${idx}">
+                        ${test.test_name}
+                        ${test.status === 'failed' && test.exception ? `<div class="exception-log" id="log-${idx}">${test.exception}</div>` : ''}
+                    </td>
+                    <td>${test.status}</td>
+                    <td>${test.start_time}</td>
+                    <td>${test.end_time}</td>
+                    <td>${test.execution_time}</td>
+                </tr>`;
+            });
+            $('#test-table tbody').html(tbody);
+
+            // Toggle exception logs
+            $('.expandable').off('click').on('click', function() {
+                const idx = $(this).data('idx');
+                $(`#log-${idx}`).toggle();
+            });
+
+            // Initialize DataTable
+            if (!$.fn.DataTable.isDataTable('#test-table')) {
+                $('#test-table').DataTable();
+            }
+        }
+
+        // Fetch JSON and render
+        fetch('results.json')
+            .then(response => response.json())
+            .then(data => renderFromJson(data))
+            .catch(err => {
+                alert('Could not load results.json');
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
