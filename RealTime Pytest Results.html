@@ -97,7 +97,7 @@
         }
 
         // Fetch JSON and render
-        fetch('results.json')
+        fetch('https://raw.githubusercontent.com/nmfireball/PytestViewer/main/results.json')
             .then(response => response.json())
             .then(data => renderFromJson(data))
             .catch(err => {
