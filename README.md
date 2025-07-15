@@ -2,17 +2,19 @@ MIST AUTOMATION EXECUTION LIVE REPORT
 
 This Project provides a simple, interactive HTML dashboard for viewing real-time or simulated pytest results. It consists of three main files
 
-## **FILES OVERVIEW**
+## Files Overview
 
-### 1. 'RealTime Pytest Results.html'
+### 1. `RealTime Pytest Results.html`
 
--## **Purpose:** Displays the test exectution summary and detailed resuts in a polished, interactive table.
--**How it works:**
-  -Uses JavaScript to fetch test results from 'results.json'
-  -Renders a summayr box, (Status, start/end time, counts)
-  -Populates a table with each test's details.
-  -Failed tests are clickable to sho/hide their exception logs.
-  -Uses [DataTables](https://datatables.net/) for sorting, searching, and styling. 
+- **Purpose:** Displays the test execution summary and detailed results in a polished, interactive table.
+- **How it works:**  
+  - Uses JavaScript to fetch test results from `results.json`.
+  - Renders a summary box (status, start/end time, counts).
+  - Populates a table with each test's details.
+  - Failed tests are clickable to show/hide their exception logs.
+  - Uses [DataTables](https://datatables.net/) for sorting, searching, and styling.
+ 
+
 ### 2. 'generate_fake_results.py'
 
 - **Purpose:** Generates a fake `results.json` file for demo/testing.
