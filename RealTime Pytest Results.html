@@ -63,34 +63,23 @@
         function renderFromJson(data) {
             // Update summary fields
             document.getElementById('current-status').textContent = data.header.title || '';
-            document.getElementById('start-time').textContent = data.header.start_time || '';
-            document.getElementById('end-time').textContent = data.header.end_time || '';
-            document.getElementById('overall-time').textContent = data.header.total_time || '';
-            // Calculate counts
-            let passed = 0, failed = 0, skipped = 0, inprogress = 0;
-            data.results.forEach(test => {
-                if (test.status === 'passed') passed++;
-                else if (test.status === 'failed') failed++;
-                else if (test.status === 'skipped') skipped++;
-                else if (test.status === 'inprogress') inprogress++;
-            });
-            document.getElementById('passed-count').textContent = passed;
-            document.getElementById('failed-count').textContent = failed;
-            document.getElementById('skipped-count').textContent = skipped;
-            document.getElementById('inprogress-count').textContent = inprogress;
+            document.getElementById('start-time').textContent = data.start_time || '';
+            document.getElementById('end-time').textContent = data.end_time || '';
+            document.getElementById('overall-time').textContent = data.overall_time || '';
+            document.getElementById('passed-count').textContent = data.passed;
+            document.getElementById('failed-count').textContent = data.failed;
+            document.getElementById('skipped-count').textContent = data.skipped;
+            document.getElementById('inprogress-count').textContent = data.inprogress;
 
             // Populate table
             let tbody = '';
-            data.results.forEach((test, idx) => {
-                tbody += `<tr class="${test.status}">
-                    <td class="${test.status === 'failed' && test.exception ? 'expandable' : ''}" data-idx="${idx}">
-                        ${test.test_name}
-                        ${test.status === 'failed' && test.exception ? `<div class="exception-log" id="log-${idx}">${test.exception}</div>` : ''}
-                    </td>
-                    <td>${test.status}</td>
-                    <td>${test.start_time}</td>
-                    <td>${test.end_time}</td>
-                    <td>${test.execution_time}</td>
+            data.tests.forEach((test, idx) => {
+                tbody += `<tr>
+                    <td>${test.name || ''}</td>
+                    <td>${test.status || ''}</td>
+                    <td>${test.start_time || ''}</td>
+                    <td>${test.end_time || ''}</td>
+                    <td>${test.execution_time || ''}</td>
                 </tr>`;
             });
             $('#test-table tbody').html(tbody);
