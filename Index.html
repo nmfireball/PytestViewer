@@ -5,6 +5,26 @@
     <title>MIST AUTOMATION EXECUTION LIVE REPORT</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
+        body {
+            font-family: Garamond, serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            font-family: Garamond, serif;
+            text-align: center;
+            color: #0059a1;  /* Updated to primary blue */
+            margin: 40px 0;
+            font-size: 2.5em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #656f7a;  /* Updated to gray */
+        }
+
         .exception-log { display: none; white-space: pre-wrap; background-color: #eee; padding: 10px; margin-top: 5px; border-left: 4px solid #d9534f; color: #a94442; font-size: 0.95em; }
         .expandable { cursor: pointer; color: blue; text-decoration: underline; }
         .failed .expandable { color: #d9534f; text-decoration: none; font-weight: bold; }
@@ -13,14 +33,23 @@
         tr.skipped { background-color: #f9f9f9 !important; color: #222; }
         tr.inprogress { background-color: #fffbe6 !important; color: #222; }
         .summary-box {
-            background: #f5f5f5;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 1200px;
         }
         .summary-box strong {
-            margin-right: 8px;
+            font-family: Garamond, serif;
+            font-size: 1.1em;
+            margin-right: 15px;
+            color: #0059a1;  /* Updated to primary blue */
+        }
+        .summary-box span {
+            font-family: Garamond, serif;
+            font-size: 1.1em;
+            color: #656f7a;  /* Updated to gray */
         }
         table.display {
             width: 100%;
@@ -28,10 +57,93 @@
             overflow: hidden;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-top: 1px solid #656f7a;  /* Updated to gray */
+        }
+        footer img {
+            max-width: 150px;
+            order: 1; /* Makes the image appear first (left side) */
+        }
+        footer p {
+            color: #656f7a;  /* Updated to gray */
+            font-size: 14px;
+            margin: 0;
+            order: 2; /* Makes the text appear second (right side) */
+        }
+
+        /* Navigation menu styles */
+        .nav-menu {
+            background-color: #0059a1;  /* Updated to primary blue */
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        .nav-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-family: Garamond, serif;
+            font-size: 1.1em;
+            padding: 5px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-menu a:hover {
+            background-color: #e86b31;  /* Updated to orange */
+        }
+        .nav-menu a.active {
+            background-color: #e86b31;  /* Updated to orange */
+        }
+
+        /* File upload styles */
+        .upload-section {
+            text-align: center;
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+        }
+        .upload-button {
+            background-color: #0059a1;  /* Updated to primary blue */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Garamond, serif;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        .upload-button:hover {
+            background-color: #e86b31;  /* Updated to orange */
+        }
+        #upload-status {
+            margin-top: 10px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <h1>MIST AUTOMATION EXECUTION LIVE REPORT</h1>
+
+    <!-- Navigation menu (if needed) -->
+    <nav class="nav-menu">
+        <ul>
+            <li><a href="index.html" class="active">Test Results</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+        </ul>
+    </nav>
+
     <div class="summary-box">
         <strong>Current Status:</strong> <span id="current-status"></span><br>
         <strong>Start Time:</strong> <span id="start-time"></span><br>
@@ -57,6 +169,16 @@
             <!-- Rows will be populated by JavaScript -->
         </tbody>
     </table>
+
+    <!-- File upload section (if needed) -->
+    <div class="upload-section">
+        <input type="file" id="json-upload" accept=".json" style="display: none;">
+        <button class="upload-button" onclick="document.getElementById('json-upload').click()">
+            Upload JSON File
+        </button>
+        <div id="upload-status"></div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
@@ -94,9 +216,24 @@
                 $(`#log-${idx}`).toggle();
             });
 
-            // Initialize DataTable
+            // Initialize DataTable with sorting options
             if (!$.fn.DataTable.isDataTable('#test-table')) {
-                $('#test-table').DataTable();
+                $('#test-table').DataTable({
+                    order: [[0, 'asc']], // Sort first column ascending
+                    columnDefs: [{
+                        targets: 0,
+                        type: 'natural',
+                        render: function(data, type, row) {
+                            if (type === 'sort') {
+                                // Extract the number from test_case_X
+                                const num = parseInt(data.match(/test_case_(\d+)/)[1]);
+                                // Pad with zeros for proper sorting
+                                return num.toString().padStart(3, '0');
+                            }
+                            return data;
+                        }
+                    }]
+                });
             }
         }
 
@@ -108,6 +245,46 @@
                 console.error('Error loading results:', err);
                 alert('Could not load results.json. Check console for details.');
             });
+
+        // File upload handling
+        document.getElementById('json-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const status = document.getElementById('upload-status');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        
+                        // Validate JSON structure
+                        if (!json.tests || !Array.isArray(json.tests) ||
+                            !json.start_time || !json.end_time || 
+                            !json.overall_time || 
+                            typeof json.passed !== 'number' ||
+                            typeof json.failed !== 'number' ||
+                            typeof json.skipped !== 'number' ||
+                            typeof json.inprogress !== 'number') {
+                            throw new Error('Invalid JSON structure');
+                        }
+                        
+                        // If validation passes, render the data
+                        renderFromJson(json);
+                        status.textContent = 'File uploaded successfully!';
+                        status.style.color = '#28a745';
+                    } catch (error) {
+                        status.textContent = 'Error: Invalid JSON format or structure';
+                        status.style.color = '#dc3545';
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
     </script>
+    <footer>
+        <img src="https://nmfireball.github.io/PytestViewer/sparksoft_logo.png" alt="SparkSoft Corp Logo">
+        <p>Designed by SparkSoft Corp</p>
+    </footer>
 </body>
 </html>
